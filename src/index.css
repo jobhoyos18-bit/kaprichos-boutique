@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-chocolate: #5C3D2E;
+  --color-brand-cream: #FDF8F0;
+  --color-brand-pink: #FADADD;
+  --color-brand-gold: #D4AF37;
+  
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "Poppins", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-brand-cream text-brand-chocolate;
+    font-family: var(--font-sans);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
