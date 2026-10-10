@@ -2,21 +2,12 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import ProductCard from '../components/ProductCard';
+import BestSellersCarousel from '../components/BestSellersCarousel';
 import BackgroundVideo from '../components/BackgroundVideo';
-import type { Product } from '../types';
 
 const Home: React.FC = () => {
-  // Mock data for initial visualization (will be replaced by Supabase)
-  const featuredProducts: Product[] = [
-    { id: '1', name: 'Vestido Elegance', slug: 'vestido-elegance', description: '', category_id: '', price: 120, old_price: 150, is_new: true, is_featured: true, stock: 10, created_at: '' },
-    { id: '2', name: 'Blusa Coquette', slug: 'blusa-coquette', description: '', category_id: '', price: 85, is_new: false, is_featured: true, stock: 15, created_at: '' },
-    { id: '3', name: 'Conjunto Seda', slug: 'conjunto-seda', description: '', category_id: '', price: 210, old_price: 250, is_new: true, is_featured: true, stock: 5, created_at: '' },
-    { id: '4', name: 'Cartera Luxe', slug: 'cartera-luxe', description: '', category_id: '', price: 180, is_new: false, is_featured: true, stock: 8, created_at: '' },
-  ];
-
   return (
-    <div className="flex flex-col gap-20 pb-20">
+    <div className="flex flex-col pb-20">
       {/* HERO SECTION */}
       <section
         aria-labelledby="home-title"
@@ -33,19 +24,7 @@ const Home: React.FC = () => {
         </Link>
       </section>
 
-      {/* FEATURED PRODUCTS */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-serif text-brand-chocolate mb-2">Productos Destacados</h2>
-          <div className="w-20 h-1 bg-brand-gold rounded-full" />
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {featuredProducts.map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </section>
+      <BestSellersCarousel />
 
       {/* CATEGORIES PREVIEW */}
       <section className="bg-brand-pink/10 py-20">

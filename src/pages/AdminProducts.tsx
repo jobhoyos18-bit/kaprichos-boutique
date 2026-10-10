@@ -41,9 +41,11 @@ const AdminProducts: React.FC = () => {
       };
 
       if (editingProduct) {
-        await supabase.from('products').update(payload).eq('id', editingProduct.id);
+        const { error } = await supabase.from('products').update(payload).eq('id', editingProduct.id);
+        if (error) throw error;
       } else {
-        await supabase.from('products').insert(payload);
+        const { error } = await supabase.from('products').insert(payload);
+        if (error) throw error;
       }
       setIsModalOpen(false);
       setEditingProduct(null);
@@ -147,15 +149,16 @@ const AdminProducts: React.FC = () => {
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Stock</label>
                 <input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} required className="w-full p-2 border rounded-lg" />
               </div>
-              <div className="flex items-center gap-4 py-2">
+              <div className="col-span-2 flex flex-wrap items-center gap-4 py-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={formData.is_new} onChange={e => setFormData({...formData, is_new: e.target.checked})} className="accent-brand-gold" />
                   <span className="text-sm font-medium">Nuevo</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={formData.is_featured} onChange={e => setFormData({...formData, is_featured: e.target.checked})} className="accent-brand-gold" />
-                  <span className="text-sm font-medium">Destacado</span>
+                  <span className="text-sm font-medium">Mostrar en Más vendidos</span>
                 </label>
+                <p className="w-full text-xs text-gray-500">Los productos marcados y con stock aparecerán en el carrusel de la página de inicio.</p>
               </div>
               <div className="col-span-2">
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
