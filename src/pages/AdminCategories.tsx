@@ -27,9 +27,11 @@ const AdminCategories: React.FC = () => {
     e.preventDefault();
     try {
       if (editingCategory) {
-        await supabase.from('categories').update(formData).eq('id', editingCategory.id);
+        const { error } = await supabase.from('categories').update(formData).eq('id', editingCategory.id);
+        if (error) throw error;
       } else {
-        await supabase.from('categories').insert(formData);
+        const { error } = await supabase.from('categories').insert(formData);
+        if (error) throw error;
       }
       setIsModalOpen(false);
       setEditingCategory(null);
@@ -40,7 +42,8 @@ const AdminCategories: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (confirm('¿Eliminar esta categoría? Algunos productos podrían quedar sin categoría.')) {
-      await supabase.from('categories').delete().eq('id', id);
+      const { error } = await supabase.from('categories').delete().eq('id', id);
+      if (error) { alert('No se pudo eliminar la categoría. Inténtalo de nuevo.'); return; }
       fetchCategories();
     }
   };
@@ -86,7 +89,7 @@ const AdminCategories: React.FC = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+          <div className="bg-white w-full max-w-md max-h-[90dvh] rounded-3xl shadow-2xl overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center bg-gray-50">
               <h3 className="text-xl font-serif text-brand-chocolate">{editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}</h3>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><X size={20} /></button>

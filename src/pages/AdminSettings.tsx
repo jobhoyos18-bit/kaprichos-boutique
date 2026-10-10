@@ -1,71 +1,58 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Save } from 'lucide-react';
+import { useStoreSettings } from '../hooks/useStoreSettings';
 
-const AdminSettings: React.FC = () => {
-  const [settings, setSettings] = useState<Record<string, string>>({});
+const fields = [
+  { key: 'whatsapp', label: 'Número de WhatsApp', type: 'tel', placeholder: '+51 950 124 807' },
+  { key: 'email', label: 'Email de contacto', type: 'email', placeholder: 'correo@ejemplo.com' },
+  { key: 'address', label: 'Dirección física', type: 'text', placeholder: 'Dirección de la boutique' },
+  { key: 'slogan', label: 'Slogan de la tienda', type: 'text', placeholder: 'Tu estilo, tu kapricho' },
+];
+export default function AdminSettings() {
+  const { settings: defaults, refresh } = useStoreSettings();
+  const [settings, setSettings] = useState<Record<string, string>>(defaults);
   const [loading, setLoading] = useState(true);
-
+  const [saving, setSaving] = useState('');
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [retry, setRetry] = useState(0);
   useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
+    let active = true;
     setLoading(true);
+    setError('');
+    void (async () => {
+      try {
+        const { data, error: loadError } = await supabase.from('store_settings').select('*');
+        if (loadError) throw loadError;
+        if (active) setSettings(previous => ({ ...previous, ...Object.fromEntries((data || []).map(row => [row.key, row.value || ''])) }));
+      } catch { if (active) setError('No pudimos cargar la configuración.'); }
+      finally { if (active) setLoading(false); }
+    })();
+    return () => { active = false; };
+  }, [retry]);
+
+  async function save(key: string) {
+    const value = (settings[key] || '').trim();
+    setError(''); setMessage('');
+    if (key === 'whatsapp' && !/^\+?[\d\s()-]{9,20}$/.test(value)) { setError('Escribe un número de WhatsApp válido con código de país.'); return; }
+    setSaving(key);
     try {
-      const { data } = await supabase.from('store_settings').select('*');
-      const mapped = (data || []).reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {});
-      setSettings(mapped);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  };
-
-  const handleSave = async (key: string, value: string) => {
-    try {
-      await supabase.from('store_settings').upsert({ key, value });
-      setSettings({ ...settings, [key]: value });
-    } catch (e) { alert('Error al guardar configuración'); }
-  };
-
-  if (loading) return <div className="text-center py-10">Cargando configuración...</div>;
-
-  return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-serif text-brand-chocolate">Configuración de la Boutique</h2>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-gray-500 uppercase">Número de WhatsApp</label>
-            <div className="flex gap-2">
-              <input value={settings['whatsapp'] || ''} onChange={e => setSettings({...settings, whatsapp: e.target.value})} className="flex-grow p-2 border rounded-lg" placeholder="+51..." />
-              <button onClick={() => handleSave('whatsapp', settings['whatsapp'] || '')} className="p-2 bg-brand-chocolate text-white rounded-lg hover:bg-brand-gold"><Save size={18} /></button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-gray-500 uppercase">Email de Contacto</label>
-            <div className="flex gap-2">
-              <input value={settings['email'] || ''} onChange={e => setSettings({...settings, email: e.target.value})} className="flex-grow p-2 border rounded-lg" placeholder="correo@ejemplo.com" />
-              <button onClick={() => handleSave('email', settings['email'] || '')} className="p-2 bg-brand-chocolate text-white rounded-lg hover:bg-brand-gold"><Save size={18} /></button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-gray-500 uppercase">Dirección Física</label>
-            <div className="flex gap-2">
-              <input value={settings['address'] || ''} onChange={e => setSettings({...settings, address: e.target.value})} className="flex-grow p-2 border rounded-lg" placeholder="Calle..." />
-              <button onClick={() => handleSave('address', settings['address'] || '')} className="p-2 bg-brand-chocolate text-white rounded-lg hover:bg-brand-gold"><Save size={18} /></button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-gray-500 uppercase">Slogan de la Tienda</label>
-            <div className="flex gap-2">
-              <input value={settings['slogan'] || ''} onChange={e => setSettings({...settings, slogan: e.target.value})} className="flex-grow p-2 border rounded-lg" placeholder="Tu estilo, tu kapricho" />
-              <button onClick={() => handleSave('slogan', settings['slogan'] || '')} className="p-2 bg-brand-chocolate text-white rounded-lg hover:bg-brand-gold"><Save size={18} /></button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default AdminSettings;
+      const { error: saveError } = await supabase.from('store_settings').upsert({ key, value });
+      if (saveError) throw saveError;
+      refresh();
+      setMessage('Guardado. El cambio ya se aplica a la página pública.');
+    } catch { setError('No se pudo guardar. Revisa tu conexión y los permisos de administrador.'); }
+    finally { setSaving(''); }
+  }
+  return <section className="space-y-6"><h2 className="text-2xl font-serif">Configuración de la boutique</h2>
+    {error && <div role="alert" className="text-red-700">{error}<button className="block underline py-3" onClick={() => setRetry(value => value + 1)}>Volver a cargar</button></div>}
+    {message && <p role="status" className="text-green-800">{message}</p>}
+    {loading ? <p>Cargando configuración…</p> : <div className="grid gap-6 bg-white p-5 rounded-xl">
+      {fields.map(field => <form key={field.key} onSubmit={event => { event.preventDefault(); void save(field.key); }} className="space-y-2">
+        <label htmlFor={field.key} className="block font-medium">{field.label}</label>
+        <div className="flex flex-wrap gap-3"><input id={field.key} type={field.type} required={field.key !== 'email'} value={settings[field.key] || ''} onChange={event => setSettings({ ...settings, [field.key]: event.target.value })} placeholder={field.placeholder} className="min-w-0 flex-1 min-h-12 p-3 border rounded-lg" />
+        <button disabled={!!saving} type="submit" aria-label={`Guardar ${field.label}`} className="min-h-12 px-4 rounded-lg bg-brand-chocolate text-white disabled:opacity-50">{saving === field.key ? 'Guardando…' : 'Guardar'}</button></div>
+      </form>)}
+    </div>}
+  </section>;
+}

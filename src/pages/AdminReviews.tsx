@@ -22,14 +22,16 @@ const AdminReviews: React.FC = () => {
 
   const toggleApproval = async (id: string, currentStatus: boolean) => {
     try {
-      await supabase.from('reviews').update({ is_approved: !currentStatus }).eq('id', id);
+      const { error } = await supabase.from('reviews').update({ is_approved: !currentStatus }).eq('id', id);
+      if (error) throw error;
       fetchReviews();
     } catch (e) { alert('Error al moderar reseña'); }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm('¿Eliminar esta reseña?')) {
-      await supabase.from('reviews').delete().eq('id', id);
+      const { error } = await supabase.from('reviews').delete().eq('id', id);
+      if (error) { alert('No se pudo eliminar la reseña. Inténtalo de nuevo.'); return; }
       fetchReviews();
     }
   };

@@ -4,15 +4,22 @@ import { supabase } from '../lib/supabase';
 export const useFavorites = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchFavorites();
+    const refresh = () => { void fetchFavorites(); };
+    window.addEventListener('favorites-updated', refresh);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => { window.setTimeout(refresh, 0); });
+    return () => { window.removeEventListener('favorites-updated', refresh); subscription.unsubscribe(); };
   }, []);
 
   const fetchFavorites = async () => {
     setLoading(true);
+    setError('');
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError && authError.name !== 'AuthSessionMissingError') throw authError;
       if (!user) {
         setFavorites([]);
         return;
@@ -26,6 +33,7 @@ export const useFavorites = () => {
       if (error) throw error;
       setFavorites(data?.map(f => f.product_id) || []);
     } catch (error) {
+      setError('No pudimos cargar tus favoritos. Inténtalo de nuevo.');
       console.error('Error fetching favorites:', error);
     } finally {
       setLoading(false);
@@ -34,8 +42,9 @@ export const useFavorites = () => {
 
   const toggleFavorite = async (productId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return { success: false, message: 'Debes iniciar sesión para guardar favoritos' };
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError && authError.name !== 'AuthSessionMissingError') throw authError;
+      if (!user) return { success: false, requiresLogin: true, message: 'Debes iniciar sesión para guardar favoritos' };
 
       const isFavorite = favorites.includes(productId);
 
@@ -54,11 +63,12 @@ export const useFavorites = () => {
         if (error) throw error;
         setFavorites([...favorites, productId]);
       }
+      window.dispatchEvent(new Event('favorites-updated'));
       return { success: true };
     } catch (error: any) {
       return { success: false, message: error.message };
     }
   };
 
-  return { favorites, isFavorite: (id: string) => favorites.includes(id), toggleFavorite, loading, fetchFavorites };
+  return { favorites, isFavorite: (id: string) => favorites.includes(id), toggleFavorite, loading, fetchFavorites, error };
 };

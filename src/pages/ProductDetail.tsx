@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, MessageCircle, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Product, ProductVariant, ProductImage, Review } from '../types';
 import ReviewForm from '../components/ReviewForm';
 import ReviewList from '../components/ReviewList';
+import { useFavorites } from '../hooks/useFavorites';
+import { useStoreSettings, whatsappLink } from '../hooks/useStoreSettings';
 
 const ProductDetail: React.FC = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const { settings } = useStoreSettings();
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [savingFavorite, setSavingFavorite] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [product, setProduct] = useState<Product | null>(null);
   const [images, setImages] = useState<ProductImage[]>([]);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
@@ -29,6 +37,15 @@ const ProductDetail: React.FC = () => {
   };
 
   const fetchProductData = async () => {
+    setLoading(true);
+    setProduct(null);
+    setImages([]);
+    setVariants([]);
+    setReviews([]);
+    setSelectedImage(0);
+    setSelectedSize('');
+    setSelectedColor('');
+    setErrorMessage('');
     try {
       const { data: productData, error: pError } = await supabase
         .from('products')
@@ -43,7 +60,7 @@ const ProductDetail: React.FC = () => {
         .from('product_images')
         .select('*')
         .eq('product_id', productData.id);
-      setImages(imagesData || []);
+      setImages((imagesData || []).sort((a, b) => Number(b.is_main) - Number(a.is_main)));
 
       const { data: variantsData } = await supabase
         .from('product_variants')
@@ -53,6 +70,7 @@ const ProductDetail: React.FC = () => {
 
       fetchReviews(productData.id);
     } catch (error) {
+      setErrorMessage('No pudimos cargar este producto. Inténtalo de nuevo.');
       console.error('Error fetching product details:', error);
     } finally {
       setLoading(false);
@@ -76,11 +94,22 @@ const ProductDetail: React.FC = () => {
 Talla: ${selectedSize || 'No seleccionada'}
 Color: ${selectedColor || 'No seleccionado'}
 ¿Está disponible?`;
-    window.open(`https://wa.me/51950124807?text=${encodeURIComponent(message)}`, '_blank');
+    window.open(whatsappLink(settings.whatsapp, message), '_blank', 'noopener,noreferrer');
   };
 
+  async function handleFavorite() {
+    if (!product || savingFavorite) return;
+    setSavingFavorite(true);
+    const result = await toggleFavorite(product.id);
+    setSavingFavorite(false);
+    if (!result.success) {
+      if (result.requiresLogin) navigate('/login');
+      else alert(result.message || 'No pudimos actualizar tus favoritos.');
+    }
+  }
+
   if (loading) return <div className="flex justify-center items-center h-screen"><div className="w-8 h-8 border-4 border-brand-pink border-t-brand-gold rounded-full animate-spin" /></div>;
-  if (!product) return <div className="text-center py-20"><h2 className="text-2xl font-serif text-brand-chocolate">Producto no encontrado</h2></div>;
+  if (!product) return <div className="text-center py-20 px-4"><h2 className="text-2xl font-serif text-brand-chocolate">{errorMessage || 'Producto no encontrado'}</h2><button onClick={fetchProductData} className="min-h-12 underline mt-4">Volver a cargar</button></div>;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -88,11 +117,11 @@ Color: ${selectedColor || 'No seleccionado'}
         <div className="lg:w-1/2">
           <div className="sticky top-24">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="aspect-[3/4] bg-brand-cream rounded-3xl overflow-hidden border border-brand-pink/20 mb-4">
-              {images.length > 0 ? <img src={images[0].url} alt={product.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-brand-chocolate/20 font-serif italic">Imagen del Producto</div>}
+              {images.length > 0 ? <img src={images[selectedImage]?.url || images[0].url} alt={product.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-brand-chocolate/20 font-serif italic">Imagen del Producto</div>}
             </motion.div>
             <div className="flex gap-4 overflow-x-auto pb-2">
               {images.map((img, idx) => (
-                <div key={img.id} className={`w-20 h-20 rounded-xl overflow-hidden border-2 cursor-pointer transition-all ${idx === 0 ? 'border-brand-gold' : 'border-transparent'}`}><img src={img.url} alt={`${product.name} ${idx}`} className="w-full h-full object-cover" /></div>
+                <button key={img.id} onClick={() => setSelectedImage(idx)} aria-label={`Ver foto ${idx + 1} de ${product.name}`} aria-pressed={selectedImage === idx} className={`shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${idx === selectedImage ? 'border-brand-gold' : 'border-transparent'}`}><img src={img.url} alt="" className="w-full h-full object-cover" /></button>
               ))}
             </div>
           </div>
@@ -103,7 +132,7 @@ Color: ${selectedColor || 'No seleccionado'}
             <div>
               <div className="flex justify-between items-start mb-2">
                 <h1 className="text-3xl md:text-4xl font-serif text-brand-chocolate leading-tight">{product.name}</h1>
-                <button className="p-3 bg-white rounded-full text-brand-chocolate hover:text-brand-pink transition-colors border border-brand-pink/20"><Heart size={20} /></button>
+                <button onClick={handleFavorite} disabled={savingFavorite} aria-label={isFavorite(product.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'} aria-pressed={isFavorite(product.id)} className="p-3 bg-white rounded-full text-brand-chocolate hover:text-brand-pink transition-colors border border-brand-pink/20 disabled:opacity-50"><Heart size={20} fill={isFavorite(product.id) ? 'currentColor' : 'none'} /></button>
               </div>
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex text-brand-gold">

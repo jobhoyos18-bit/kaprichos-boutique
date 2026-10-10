@@ -1,11 +1,23 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import BestSellersCarousel from '../components/BestSellersCarousel';
 import BackgroundVideo from '../components/BackgroundVideo';
+import { supabase } from '../lib/supabase';
+import type { Category } from '../types';
 
 const Home: React.FC = () => {
+  const [categories, setCategories] = useState<Pick<Category, 'name' | 'slug'>[]>([
+    { name: 'Vestidos', slug: 'vestidos' }, { name: 'Blusas', slug: 'blusas' },
+    { name: 'Pantalones', slug: 'pantalones' }, { name: 'Accesorios', slug: 'accesorios' },
+  ]);
+  useEffect(() => {
+    let active = true;
+    void supabase.from('categories').select('name,slug').order('name').then(({ data, error }) => {
+      if (active && !error && data?.length) setCategories(data);
+    });
+    return () => { active = false; };
+  }, []);
   return (
     <div className="flex flex-col pb-20">
       {/* HERO SECTION */}
@@ -32,14 +44,14 @@ const Home: React.FC = () => {
           <h2 className="text-3xl md:text-4xl font-serif text-brand-chocolate mb-12">Nuestras Categorías</h2>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {['Vestidos', 'Blusas', 'Pantalones', 'Accesorios'].map((cat) => (
-              <motion.div 
-                key={cat}
-                whileHover={{ scale: 1.02 }}
+            {categories.map((cat) => (
+              <Link
+                key={cat.slug}
+                to={`/catalogo?categoria=${encodeURIComponent(cat.slug)}`}
                 className="p-8 bg-white rounded-2xl border border-brand-pink/30 text-brand-chocolate font-serif text-xl cursor-pointer hover:border-brand-gold transition-all"
               >
-                {cat}
-              </motion.div>
+                {cat.name}
+              </Link>
             ))}
           </div>
         </div>

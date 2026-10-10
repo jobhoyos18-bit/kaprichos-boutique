@@ -1,4 +1,5 @@
 export interface Product {
+  product_images?: ProductImage[];
   id: string;
   name: string;
   slug: string;

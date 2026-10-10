@@ -1,8 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Share2, Send } from 'lucide-react';
+import { useStoreSettings, whatsappLink } from '../hooks/useStoreSettings';
 
 const Contact: React.FC = () => {
+  const { settings } = useStoreSettings();
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="text-center mb-16">
@@ -33,7 +35,7 @@ const Contact: React.FC = () => {
               </div>
               <div>
                 <h3 className="font-serif text-lg text-brand-chocolate">Ubicación</h3>
-                <p className="text-brand-chocolate/60 font-sans">Calle Trujillo 696, Chepén, La Libertad, Perú</p>
+                <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`} target="_blank" rel="noopener noreferrer" className="text-brand-chocolate/60 font-sans underline">{settings.address}</a>
               </div>
             </div>
 
@@ -43,7 +45,7 @@ const Contact: React.FC = () => {
               </div>
               <div>
                 <h3 className="font-serif text-lg text-brand-chocolate">WhatsApp</h3>
-                <p className="text-brand-chocolate/60 font-sans">+51 950 124 807</p>
+                <a href={whatsappLink(settings.whatsapp)} target="_blank" rel="noopener noreferrer" className="text-brand-chocolate/60 font-sans underline">{settings.whatsapp}</a>
               </div>
             </div>
 
@@ -53,7 +55,7 @@ const Contact: React.FC = () => {
               </div>
               <div>
                 <h3 className="font-serif text-lg text-brand-chocolate">Correo Electrónico</h3>
-                <p className="text-brand-chocolate/60 font-sans">Disponible en configuración</p>
+                {settings.email ? <a href={`mailto:${settings.email}`} className="text-brand-chocolate/60 font-sans underline break-all">{settings.email}</a> : <p className="text-brand-chocolate/60 font-sans">Contáctanos por WhatsApp</p>}
               </div>
             </div>
           </div>
@@ -80,7 +82,7 @@ const Contact: React.FC = () => {
             Escríbenos directamente por WhatsApp para una atención personalizada y rápida.
           </p>
           <a 
-            href="https://wa.me/51950124807" 
+            href={whatsappLink(settings.whatsapp)}
             target="_blank" 
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-3 py-4 px-8 bg-brand-gold text-white rounded-full font-sans uppercase tracking-widest text-sm hover:bg-white hover:text-brand-chocolate transition-all shadow-lg"

@@ -1,7 +1,9 @@
 import React from 'react';
 import { Share2, Send } from 'lucide-react';
+import { useStoreSettings, whatsappLink } from '../hooks/useStoreSettings';
 
 const Footer: React.FC = () => {
+  const { settings } = useStoreSettings();
   return (
     <footer className="bg-brand-chocolate text-brand-cream pt-12 pb-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -10,7 +12,7 @@ const Footer: React.FC = () => {
           <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <h3 className="text-2xl font-serif font-bold mb-4 text-brand-gold">KAPRICHO'S BOUTIQUE</h3>
             <p className="text-brand-cream/80 font-sans text-sm italic mb-6">
-              "Tu estilo, tu kapricho"
+              “{settings.slogan}”
             </p>
             <div className="flex space-x-4">
               <a href="https://www.instagram.com/kaprichosboutiqueperu?stkn=aGk3ZnE2YzhwejJ6" target="_blank" rel="noopener noreferrer" className="hover:text-brand-gold transition-colors">
@@ -38,12 +40,12 @@ const Footer: React.FC = () => {
             <h4 className="text-lg font-serif font-semibold mb-4 text-brand-gold">Contacto</h4>
             <div className="text-brand-cream/80 text-sm font-sans space-y-2">
               <p className="flex items-center justify-center md:justify-start gap-2">
-                <Send size={16} /> +51 950 124 807
+                <Send size={16} /> <a href={whatsappLink(settings.whatsapp)} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 py-2">{settings.whatsapp}</a>
               </p>
               <p className="text-center md:text-left">
-                Calle Trujillo 696, <br />
-                Chepén, La Libertad, Perú
+                {settings.address}
               </p>
+              {settings.email && <a href={`mailto:${settings.email}`} className="block break-all underline">{settings.email}</a>}
             </div>
           </div>
         </div>

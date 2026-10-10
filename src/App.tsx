@@ -11,16 +11,15 @@ import AdminProducts from './pages/AdminProducts';
 import AdminCategories from './pages/AdminCategories';
 import AdminReviews from './pages/AdminReviews';
 import AdminSettings from './pages/AdminSettings';
+import Account from './pages/Account';
+import { StoreSettingsProvider } from './hooks/useStoreSettings';
 
 // Simple placeholder pages
-const Offers = () => <div className="py-20 text-center font-serif text-3xl text-brand-chocolate">Ofertas Especiales</div>;
-const New = () => <div className="py-20 text-center font-serif text-3xl text-brand-chocolate">Nuevas Colecciones</div>;
-const Account = () => <div className="py-20 text-center font-serif text-3xl text-brand-chocolate">Mi Cuenta</div>;
 const AdminDashboard = () => <div className="py-10 text-2xl font-serif text-brand-chocolate">Bienvenida al Dashboard Administrativo</div>;
 
 function App() {
   return (
-    <>
+    <StoreSettingsProvider>
       <Router>
         <Routes>
           <Route path="/" element={<Layout />}>
@@ -29,8 +28,8 @@ function App() {
             <Route path="producto/:slug" element={<ProductDetail />} />
             <Route path="login" element={<AuthPage mode="login" />} />
             <Route path="registro" element={<AuthPage mode="register" />} />
-            <Route path="ofertas" element={<Offers />} />
-            <Route path="nuevos" element={<New />} />
+            <Route path="ofertas" element={<Catalog key="offers" collection="offers" />} />
+            <Route path="nuevos" element={<Catalog key="new" collection="new" />} />
             <Route path="favoritos" element={<Favorites />} />
             <Route path="cuenta" element={<Account />} />
             <Route path="contacto" element={<Contact />} />
@@ -46,7 +45,7 @@ function App() {
           </Route>
         </Routes>
       </Router>
-    </>
+    </StoreSettingsProvider>
   );
 }
 

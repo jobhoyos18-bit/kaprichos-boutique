@@ -12,10 +12,12 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ productId, userId, onReviewSubm
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setMessage('');
     try {
       const { error } = await supabase
         .from('reviews')
@@ -28,6 +30,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ productId, userId, onReviewSubm
       if (error) throw error;
       setComment('');
       setRating(5);
+      setMessage('Gracias. Tu reseña se publicará después de ser aprobada.');
       onReviewSubmitted();
     } catch (error: any) {
       alert(error.message);
@@ -42,12 +45,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ productId, userId, onReviewSubm
       
       <div className="flex gap-2">
         {[1, 2, 3, 4, 5].map((star) => (
-          <Star 
-            key={star} 
-            size={24} 
-            onClick={() => setRating(star)}
-            className={`cursor-pointer transition-colors ${star <= rating ? 'text-brand-gold fill-brand-gold' : 'text-brand-chocolate/20'}`}
-          />
+          <button key={star} type="button" onClick={() => setRating(star)} aria-label={`Calificar con ${star} ${star === 1 ? 'estrella' : 'estrellas'}`} aria-pressed={rating === star} className="min-w-11 min-h-11 grid place-items-center"><Star size={24} className={star <= rating ? 'text-brand-gold fill-brand-gold' : 'text-brand-chocolate/20'} /></button>
         ))}
       </div>
 
@@ -59,7 +57,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ productId, userId, onReviewSubm
         required
       />
 
-      <button 
+      {message && <p role="status" className="text-sm text-green-800">{message}</p>}
+      <button
         disabled={loading}
         className="px-6 py-2 bg-brand-chocolate text-brand-cream rounded-full text-sm uppercase tracking-widest hover:bg-brand-gold transition-all disabled:opacity-50"
       >

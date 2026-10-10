@@ -9,7 +9,8 @@ import { useNavigate } from 'react-router-dom';
 const Favorites: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const { favorites, loading: favLoading } = useFavorites();
+  const { favorites, loading: favLoading, error: favoritesError, fetchFavorites } = useFavorites();
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,6 +18,7 @@ const Favorites: React.FC = () => {
   }, [favorites]);
 
   const fetchFavoriteProducts = async () => {
+    setError('');
     if (favorites.length === 0) {
       setProducts([]);
       setLoading(false);
@@ -27,12 +29,13 @@ const Favorites: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select('*,product_images(*)')
         .in('id', favorites);
 
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
+      setError('No pudimos cargar los productos favoritos.');
       console.error('Error fetching favorite products:', error);
     } finally {
       setLoading(false);
@@ -48,7 +51,7 @@ const Favorites: React.FC = () => {
         <div className="w-20 h-1 bg-brand-gold rounded-full" />
       </div>
 
-      {loading ? (
+      {favoritesError || error ? <div role="alert" className="text-center py-12"><p>{favoritesError || error}</p><button onClick={() => { void fetchFavorites(); void fetchFavoriteProducts(); }} className="min-h-12 underline">Volver a cargar</button></div> : loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="w-8 h-8 border-4 border-brand-pink border-t-brand-gold rounded-full animate-spin" />
         </div>

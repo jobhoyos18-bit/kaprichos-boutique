@@ -35,6 +35,7 @@ const AdminProducts: React.FC = () => {
     try {
       const payload = {
         ...formData,
+        category_id: formData.category_id || null,
         price: parseFloat(formData.price),
         old_price: formData.old_price ? parseFloat(formData.old_price) : null,
         stock: parseInt(formData.stock),
@@ -56,7 +57,8 @@ const AdminProducts: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (confirm('¿Eliminar este producto?')) {
-      await supabase.from('products').delete().eq('id', id);
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) { alert('No se pudo eliminar el producto. Inténtalo de nuevo.'); return; }
       fetchData();
     }
   };
@@ -115,7 +117,7 @@ const AdminProducts: React.FC = () => {
       {/* Modal Form */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden">
+          <div className="bg-white w-full max-w-2xl max-h-[90dvh] rounded-3xl shadow-2xl overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center bg-gray-50">
               <h3 className="text-xl font-serif text-brand-chocolate">{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</h3>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><X size={20} /></button>

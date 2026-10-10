@@ -41,7 +41,8 @@ const AdminLayout: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) { alert('No se pudo cerrar la sesión. Inténtalo de nuevo.'); return; }
     navigate('/login');
   };
 
@@ -57,9 +58,9 @@ const AdminLayout: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
       {/* Sidebar */}
-      <aside className="w-64 bg-brand-chocolate text-brand-cream flex flex-col">
+      <aside className="w-full md:w-64 md:shrink-0 bg-brand-chocolate text-brand-cream flex flex-col">
         <div className="p-6 border-b border-brand-chocolate/50">
           <h2 className="font-serif text-xl font-bold">Admin Panel</h2>
           <p className="text-xs text-brand-cream/60 uppercase tracking-widest">Kapricho's Boutique</p>
@@ -90,14 +91,14 @@ const AdminLayout: React.FC = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow overflow-auto">
+      <main className="min-w-0 flex-grow overflow-auto">
         <header className="bg-white h-16 border-b flex items-center px-8 justify-between">
           <h3 className="font-sans font-semibold text-gray-700">Gestión de la Boutique</h3>
           <div className="flex items-center gap-4">
             <span className="text-xs bg-brand-gold/20 text-brand-gold px-2 py-1 rounded-full font-bold uppercase">Administrador</span>
           </div>
         </header>
-        <div className="p-8">
+        <div className="p-4 md:p-8">
           <Outlet />
         </div>
       </main>

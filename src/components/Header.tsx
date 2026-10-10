@@ -20,8 +20,10 @@ const Header: React.FC = () => {
           {/* Mobile Menu Button */}
           <div className="flex items-center md:hidden">
             <button 
+              aria-label={isOpen ? 'Cerrar menú' : 'Abrir menú'}
+              aria-expanded={isOpen}
               onClick={() => setIsOpen(!isOpen)} 
-              className="text-brand-chocolate hover:text-brand-gold transition-colors"
+              className="min-h-11 min-w-11 flex items-center text-brand-chocolate hover:text-brand-gold transition-colors"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -48,10 +50,10 @@ const Header: React.FC = () => {
               </Link>
             ))}
             <div className="flex items-center space-x-4 ml-4 border-l pl-4 border-brand-pink/50">
-              <Link to="/favoritos" className="text-brand-chocolate hover:text-brand-gold transition-colors">
+              <Link to="/favoritos" aria-label="Mis favoritos" className="text-brand-chocolate hover:text-brand-gold transition-colors">
                 <Heart size={20} />
               </Link>
-              <Link to="/cuenta" className="text-brand-chocolate hover:text-brand-gold transition-colors">
+              <Link to="/cuenta" aria-label="Mi cuenta" className="text-brand-chocolate hover:text-brand-gold transition-colors">
                 <User size={20} />
               </Link>
             </div>
@@ -59,10 +61,10 @@ const Header: React.FC = () => {
 
           {/* Mobile Icons */}
           <div className="flex items-center md:hidden space-x-4">
-            <Link to="/favoritos" className="text-brand-chocolate">
+            <Link to="/favoritos" aria-label="Mis favoritos" className="text-brand-chocolate">
               <Heart size={20} />
             </Link>
-            <Link to="/cuenta" className="text-brand-chocolate">
+            <Link to="/cuenta" aria-label="Mi cuenta" className="text-brand-chocolate">
               <User size={20} />
             </Link>
           </div>
